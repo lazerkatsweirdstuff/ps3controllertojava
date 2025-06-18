@@ -31,6 +31,10 @@ def move_mouse(dx, dy):
 def scroll_mouse(amount):
     ctypes.windll.user32.mouse_event(0x0800, 0, 0, amount, 0)
 
+def click_middle():
+    ctypes.windll.user32.mouse_event(0x0020, 0, 0, 0, 0)  
+    ctypes.windll.user32.mouse_event(0x0040, 0, 0, 0, 0)  
+
 def mouse_click(down_flag, up_flag, state, pressed):
     if state and not pressed:
         ctypes.windll.user32.mouse_event(down_flag, 0, 0, 0, 0)
@@ -61,7 +65,11 @@ l2_pressed = False
 r2_pressed = False
 t_held = False
 esc_held = False
-shift_held = False  
+shift_held = False
+ctrl_held = False
+e_toggled = False
+e_toggle_state = False
+dpad_up_was_pressed = False
 
 while True:
     pygame.event.pump()
@@ -98,7 +106,22 @@ while True:
         keyboard.release('shift')
         shift_held = False
 
-    keyboard.press('e') if btn[2] else keyboard.release('e')
+    if btn[2] and not e_toggled:
+        if not e_toggle_state:
+            keyboard.press('e')
+        else:
+            keyboard.release('e')
+        e_toggle_state = not e_toggle_state
+        e_toggled = True
+    elif not btn[2] and e_toggled:
+        e_toggled = False
+
+    if btn[3] and not ctrl_held:
+        keyboard.press('ctrl')
+        ctrl_held = True
+    elif not btn[3] and ctrl_held:
+        keyboard.release('ctrl')
+        ctrl_held = False
 
     if btn[7] and not esc_held:
         keyboard.press('esc')
@@ -119,10 +142,16 @@ while True:
         keyboard.release('t')
         t_held = False
 
-    if btn[4]:  
+    if dpad_y == 1 and not dpad_up_was_pressed:
+        click_middle()
+        dpad_up_was_pressed = True
+    elif dpad_y != 1 and dpad_up_was_pressed:
+        dpad_up_was_pressed = False
+
+    if btn[4]:
         scroll_mouse(120)
         time.sleep(0.15)
-    if btn[5]:  
+    if btn[5]:
         scroll_mouse(-120)
         time.sleep(0.15)
 
